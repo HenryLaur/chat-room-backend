@@ -7,6 +7,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -14,25 +16,48 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Component
 public class SocketHandler extends TextWebSocketHandler {
 
-    List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+    HashMap<String,List<WebSocketSession>> sessions = new HashMap<>();
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message)
             throws InterruptedException, IOException {
-        System.out.println(message);
+        String uuid = getSessionUuid(session);
+        if(uuid != null) {
+            List<WebSocketSession> webSocketSessionsForUuid = sessions.get(uuid);
+            System.out.println(message);
 
-        for(WebSocketSession webSocketSession : sessions) {
-            if(webSocketSession.isOpen()) {
-                webSocketSession.sendMessage(message);
+            for (WebSocketSession webSocketSession : webSocketSessionsForUuid) {
+                if (webSocketSession.isOpen()) {
+                    webSocketSession.sendMessage(message);
+                }
+
             }
-
         }
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         //the messages will be broadcasted to all users.
-        System.out.println("CONNECTED");
-        sessions.add(session);
+        String uuid = getSessionUuid(session);
+        if (uuid != null) {
+            List<WebSocketSession> webSocketSessions = sessions.get(uuid);
+            if(webSocketSessions == null) {
+                webSocketSessions = new ArrayList<>();
+            }
+            webSocketSessions.add(session);
+            sessions.put(uuid, webSocketSessions);
+        } else {
+            System.out.println("COULD NOT FIND SESSION UUID FOR SESSION " + session);
+        }
+    }
+
+    public String getSessionUuid(WebSocketSession session) {
+        if (session.getUri() != null) {
+            String[] SplitURL = session.getUri().getPath().split("/");
+            return SplitURL[SplitURL.length - 1];
+
+        } else {
+            return null;
+        }
     }
 }

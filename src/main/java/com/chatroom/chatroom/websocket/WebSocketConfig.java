@@ -10,6 +10,6 @@ import org.springframework.web.socket.config.annotation.*;
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new SocketHandler(), "/name").setAllowedOrigins("*");
+        registry.addHandler(new SocketHandler(), "/ws/*").setAllowedOrigins("*");
     }
 }

@@ -1,6 +1,6 @@
 package com.chatroom.chatroom.services;
 
-import com.chatroom.chatroom.repository.ChatroomRepository;
+import com.chatroom.chatroom.repository.MessageRepository;
 import com.chatroom.chatroom.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 @Service
-public class ChatroomService {
+public class MessageService {
     @Autowired
-    private ChatroomRepository chatroomRepository;
+    private MessageRepository chatroomRepository;
 
     public void saveMessage(Message message) {
         chatroomRepository.save(message);
