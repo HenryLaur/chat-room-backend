@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/messages")
 public class MessageController {
 
     @Autowired
@@ -21,8 +22,12 @@ public class MessageController {
     }
     @GetMapping("/all")
     public List<Message> all() {
-        System.out.println(chatroomService.getAll().get(0).getId());
         return chatroomService.getAll();
+    }
+
+    @GetMapping("/{uuid}")
+    public List<Message>  getMessagesFromChannel(@PathVariable String uuid) {
+        return chatroomService.getAllMessagesFromChannel(uuid);
     }
 
 }

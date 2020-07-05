@@ -1,6 +1,10 @@
 package com.chatroom.chatroom.websocket;
 
+import com.chatroom.chatroom.channels.Channel;
+import com.chatroom.chatroom.message.Message;
+import com.chatroom.chatroom.services.MessageService;
 import com.google.gson.Gson;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -11,12 +15,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class SocketHandler extends TextWebSocketHandler {
 
-    HashMap<String,List<WebSocketSession>> sessions = new HashMap<>();
+    @Autowired
+    private MessageService messageService;
+    Map<String,List<WebSocketSession>> sessions = new HashMap<>();
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message)
@@ -29,6 +34,8 @@ public class SocketHandler extends TextWebSocketHandler {
             for (WebSocketSession webSocketSession : webSocketSessionsForUuid) {
                 if (webSocketSession.isOpen()) {
                     webSocketSession.sendMessage(message);
+                    SaveMessageToDB(session, message);
+
                 }
 
             }
@@ -49,6 +56,14 @@ public class SocketHandler extends TextWebSocketHandler {
         } else {
             System.out.println("COULD NOT FIND SESSION UUID FOR SESSION " + session);
         }
+    }
+
+    private void SaveMessageToDB(WebSocketSession session, TextMessage message) {
+        Message messageFromJson = new Gson().fromJson(message.getPayload(), Message.class);
+        Channel channel = new Channel();
+        channel.setUuid(getSessionUuid(session));
+        messageFromJson.setChannel(channel);
+        messageService.saveMessage(messageFromJson);
     }
 
     public String getSessionUuid(WebSocketSession session) {

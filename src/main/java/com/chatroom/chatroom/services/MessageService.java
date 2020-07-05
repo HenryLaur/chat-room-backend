@@ -10,15 +10,25 @@ import java.util.List;
 @Service
 public class MessageService {
     @Autowired
-    private MessageRepository chatroomRepository;
+    private MessageRepository messageRepository;
 
     public void saveMessage(Message message) {
-        chatroomRepository.save(message);
+        messageRepository.save(message);
     }
 
     public List<Message> getAll() {
         List<Message> messages = new ArrayList<>();
-        chatroomRepository.findAll().forEach(messages::add);
+        messageRepository.findAll().forEach(messages::add);
+        return messages;
+    }
+
+    public List<Message> getAllMessagesFromChannel(String channelUuid) {
+        List<Message> messages = new ArrayList<>();
+        messageRepository.findAll().forEach(message -> {
+            if(message.getChannel() != null && message.getChannel().getUuid().equals(channelUuid)) {
+                messages.add(message);
+            }
+        });
         return messages;
     }
 }
