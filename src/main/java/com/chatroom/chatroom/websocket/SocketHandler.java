@@ -3,6 +3,9 @@ package com.chatroom.chatroom.websocket;
 import com.chatroom.chatroom.channels.Channel;
 import com.chatroom.chatroom.message.Message;
 import com.chatroom.chatroom.services.MessageService;
+import com.chatroom.chatroom.services.UsersInChannelService;
+import com.chatroom.chatroom.user.User;
+import com.chatroom.chatroom.user.UserInChannel;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,6 +26,10 @@ public class SocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private UsersInChannelService usersInChannelService;
+
     Map<String,List<WebSocketSession>> sessions = new HashMap<>();
 
     @Override
@@ -33,7 +40,7 @@ public class SocketHandler extends TextWebSocketHandler {
             List<WebSocketSession> webSocketSessionsForUuid = sessions.get(uuid);
             System.out.println(message.getPayload());
             System.out.println(webSocketSessionsForUuid);
-            SaveMessageToDB(session, message);
+            handleMessageType(session, message);
             for (WebSocketSession webSocketSession : webSocketSessionsForUuid) {
                 if (webSocketSession.isOpen()) {
                     try {
@@ -49,7 +56,6 @@ public class SocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        //the messages will be broadcasted to all users.
         String uuid = getSessionUuid(session);
         if (uuid != null) {
             List<WebSocketSession> webSocketSessions = sessions.get(uuid);
@@ -69,6 +75,7 @@ public class SocketHandler extends TextWebSocketHandler {
             List<WebSocketSession> webSocketSessions = sessions.get(uuid);
             webSocketSessions.remove(session);
             sessions.put(uuid, webSocketSessions);
+            usersInChannelService.deleteUserInChannelByWebSocketId(session.getId());
         } else {
             System.out.println("COULD NOT FIND SESSION UUID FOR SESSION " + session);
         }
@@ -89,6 +96,26 @@ public class SocketHandler extends TextWebSocketHandler {
 
         } else {
             return null;
+        }
+    }
+
+    private void handleMessageType(WebSocketSession session, TextMessage message) {
+        WebSocketMessage webSocketMessage = new Gson().fromJson(message.getPayload(), WebSocketMessage.class);
+        System.out.println(webSocketMessage.getType());
+        if(webSocketMessage.getType().equals("MESSAGE")) {
+            SaveMessageToDB(session, message);
+        } else if (webSocketMessage.getType().equals("JOIN")){
+            UserInChannel userInChannel = new UserInChannel();
+            userInChannel.setChannel(webSocketMessage.getContent().getChannel());
+            userInChannel.setUsername(webSocketMessage.getContent().getUser().getName());
+            userInChannel.setWebSocketId(session.getId());
+            usersInChannelService.saveUserInChannel(userInChannel);
+        } else if (webSocketMessage.getType().equals("LEAVE")) {
+            UserInChannel userInChannel = new UserInChannel();
+            userInChannel.setChannel(webSocketMessage.getContent().getChannel());
+            userInChannel.setUsername(webSocketMessage.getContent().getUser().getName());
+            userInChannel.setWebSocketId(session.getId());
+            usersInChannelService.deleteUserInChannel(userInChannel);
         }
     }
 }
