@@ -15,11 +15,6 @@ public class MessageController {
     @Autowired
     private MessageService chatroomService;
 
-    @PostMapping("/message")
-    public Message message(@RequestBody Message message) {
-        chatroomService.saveMessage(message);
-        return message;
-    }
     @GetMapping("/all")
     public List<Message> all() {
         return chatroomService.getAll();

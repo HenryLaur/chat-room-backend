@@ -6,10 +6,12 @@ import com.chatroom.chatroom.services.MessageService;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,13 +31,16 @@ public class SocketHandler extends TextWebSocketHandler {
         String uuid = getSessionUuid(session);
         if(uuid != null) {
             List<WebSocketSession> webSocketSessionsForUuid = sessions.get(uuid);
-            System.out.println(message);
-
+            System.out.println(message.getPayload());
+            System.out.println(webSocketSessionsForUuid);
+            SaveMessageToDB(session, message);
             for (WebSocketSession webSocketSession : webSocketSessionsForUuid) {
                 if (webSocketSession.isOpen()) {
-                    webSocketSession.sendMessage(message);
-                    SaveMessageToDB(session, message);
-
+                    try {
+                        webSocketSession.sendMessage(message);
+                    } catch (EOFException e) {
+                        System.out.println("ERROR: " + e);
+                    }
                 }
 
             }
@@ -52,6 +57,17 @@ public class SocketHandler extends TextWebSocketHandler {
                 webSocketSessions = new ArrayList<>();
             }
             webSocketSessions.add(session);
+            sessions.put(uuid, webSocketSessions);
+        } else {
+            System.out.println("COULD NOT FIND SESSION UUID FOR SESSION " + session);
+        }
+    }
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        String uuid = getSessionUuid(session);
+        if (uuid != null) {
+            List<WebSocketSession> webSocketSessions = sessions.get(uuid);
+            webSocketSessions.remove(session);
             sessions.put(uuid, webSocketSessions);
         } else {
             System.out.println("COULD NOT FIND SESSION UUID FOR SESSION " + session);
