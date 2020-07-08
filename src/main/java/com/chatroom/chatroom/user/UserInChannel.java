@@ -20,7 +20,7 @@ public class UserInChannel {
     private String username;
     @JsonIgnore
     private String webSocketId;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="CHANNEL_UUID")
     @JsonIgnore
     private Channel channel;

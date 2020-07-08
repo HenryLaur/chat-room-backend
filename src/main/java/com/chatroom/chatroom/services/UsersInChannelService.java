@@ -47,10 +47,18 @@ public class UsersInChannelService {
     public Map<String, List<String>> getUsersInChannelList(String[] channelUuids) {
         Map<String, List<String>> usersInChannels = new HashMap<>();
         for (String channelUuid : channelUuids) {
-            System.out.println(new ArrayList<>(getUsersInChannel(channelUuid)) + "************");
             usersInChannels.put(channelUuid, new ArrayList<>(getUsersInChannel(channelUuid)));
         }
-        System.out.println(usersInChannels.toString());
         return usersInChannels;
+    }
+
+    public UserInChannel getUserInChannelByWebSocketID(String websocketID) {
+        final UserInChannel[] userInChannelByWebSocketID = {null};
+        usersInChannelRepository.findAll().forEach(userInChannel -> {
+            if(userInChannel.getWebSocketId().equals(websocketID)) {
+                userInChannelByWebSocketID[0] = userInChannel;
+            }
+        });
+        return userInChannelByWebSocketID[0];
     }
 }

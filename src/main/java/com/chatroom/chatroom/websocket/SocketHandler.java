@@ -5,6 +5,7 @@ import com.chatroom.chatroom.message.Message;
 import com.chatroom.chatroom.services.MessageService;
 import com.chatroom.chatroom.services.UsersInChannelService;
 import com.chatroom.chatroom.user.UserInChannel;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,7 +49,6 @@ public class SocketHandler extends TextWebSocketHandler {
                         System.out.println("ERROR: " + e);
                     }
                 }
-
             }
         }
     }
@@ -75,12 +75,41 @@ public class SocketHandler extends TextWebSocketHandler {
             List<WebSocketSession> webSocketSessions = sessions.get(uuid);
             webSocketSessions.remove(session);
             sessions.put(uuid, webSocketSessions);
+            UserInChannel userInChannelByWebSocketID = usersInChannelService.getUserInChannelByWebSocketID(session.getId());
+            if(userInChannelByWebSocketID != null) {
+                WebSocketMessage leaveMessageFromClosedConnection = createLeaveMessageFromClosedConnection(userInChannelByWebSocketID);
+                sendMessageToAllConnectionsInChannel(leaveMessageFromClosedConnection,uuid);
+            }
+
             usersInChannelService.deleteUserInChannelByWebSocketId(session.getId());
+
+
         } else {
             System.out.println("COULD NOT FIND SESSION UUID FOR SESSION " + session);
         }
     }
 
+    private WebSocketMessage createLeaveMessageFromClosedConnection(UserInChannel userInChannel) {
+        WebSocketMessage webSocketMessage = new WebSocketMessage();
+        webSocketMessage.setType("LEAVE");
+        WebSocketMessageContent webSocketMessageContent = new WebSocketMessageContent();
+        webSocketMessageContent.setChannel(userInChannel.getChannel());
+        webSocketMessageContent.setUser(userInChannel.getUsername());
+        webSocketMessage.setContent(webSocketMessageContent);
+        return webSocketMessage;
+    }
+
+    private void sendMessageToAllConnectionsInChannel(WebSocketMessage webSocketMessage, String channelUuid) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<WebSocketSession> webSocketSessionsForUuid = sessions.get(channelUuid);
+        String jsonMessage = objectMapper.writeValueAsString(webSocketMessage);
+        TextMessage textMessage = new TextMessage(jsonMessage);
+        for (WebSocketSession webSocketSession : webSocketSessionsForUuid) {
+            if (webSocketSession.isOpen()) {
+                webSocketSession.sendMessage(textMessage);
+            }
+        }
+    }
     private void SaveMessageToDB(WebSocketSession session, Message message) {
         Channel channel = new Channel();
         channel.setUuid(getSessionUuid(session));

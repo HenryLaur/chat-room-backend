@@ -19,7 +19,7 @@ public class Message {
     private Long id;
     private String messageBody;
     private String user;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="CHANNEL_UUID")
     @JsonIgnore
     private Channel channel;
