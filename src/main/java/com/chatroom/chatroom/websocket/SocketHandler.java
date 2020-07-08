@@ -4,7 +4,6 @@ import com.chatroom.chatroom.channels.Channel;
 import com.chatroom.chatroom.message.Message;
 import com.chatroom.chatroom.services.MessageService;
 import com.chatroom.chatroom.services.UsersInChannelService;
-import com.chatroom.chatroom.user.User;
 import com.chatroom.chatroom.user.UserInChannel;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +69,7 @@ public class SocketHandler extends TextWebSocketHandler {
     }
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        System.out.println("CLOSING: " + session);
         String uuid = getSessionUuid(session);
         if (uuid != null) {
             List<WebSocketSession> webSocketSessions = sessions.get(uuid);
@@ -81,12 +81,11 @@ public class SocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void SaveMessageToDB(WebSocketSession session, TextMessage message) {
-        Message messageFromJson = new Gson().fromJson(message.getPayload(), Message.class);
+    private void SaveMessageToDB(WebSocketSession session, Message message) {
         Channel channel = new Channel();
         channel.setUuid(getSessionUuid(session));
-        messageFromJson.setChannel(channel);
-        messageService.saveMessage(messageFromJson);
+        message.setChannel(channel);
+        messageService.saveMessage(message);
     }
 
     public String getSessionUuid(WebSocketSession session) {
@@ -102,20 +101,27 @@ public class SocketHandler extends TextWebSocketHandler {
     private void handleMessageType(WebSocketSession session, TextMessage message) {
         WebSocketMessage webSocketMessage = new Gson().fromJson(message.getPayload(), WebSocketMessage.class);
         System.out.println(webSocketMessage.getType());
-        if(webSocketMessage.getType().equals("MESSAGE")) {
-            SaveMessageToDB(session, message);
-        } else if (webSocketMessage.getType().equals("JOIN")){
-            UserInChannel userInChannel = new UserInChannel();
-            userInChannel.setChannel(webSocketMessage.getContent().getChannel());
-            userInChannel.setUsername(webSocketMessage.getContent().getUser().getName());
-            userInChannel.setWebSocketId(session.getId());
-            usersInChannelService.saveUserInChannel(userInChannel);
-        } else if (webSocketMessage.getType().equals("LEAVE")) {
-            UserInChannel userInChannel = new UserInChannel();
-            userInChannel.setChannel(webSocketMessage.getContent().getChannel());
-            userInChannel.setUsername(webSocketMessage.getContent().getUser().getName());
-            userInChannel.setWebSocketId(session.getId());
-            usersInChannelService.deleteUserInChannel(userInChannel);
+        switch (webSocketMessage.getType()) {
+            case "MESSAGE":
+                System.out.println(webSocketMessage.getContent().getMessage());
+                SaveMessageToDB(session, webSocketMessage.getContent().getMessage());
+                break;
+            case "JOIN": {
+                UserInChannel userInChannel = new UserInChannel();
+                userInChannel.setChannel(webSocketMessage.getContent().getChannel());
+                userInChannel.setUsername(webSocketMessage.getContent().getUser());
+                userInChannel.setWebSocketId(session.getId());
+                usersInChannelService.saveUserInChannel(userInChannel);
+                break;
+            }
+            case "LEAVE": {
+                UserInChannel userInChannel = new UserInChannel();
+                userInChannel.setChannel(webSocketMessage.getContent().getChannel());
+                userInChannel.setUsername(webSocketMessage.getContent().getUser());
+                userInChannel.setWebSocketId(session.getId());
+                usersInChannelService.deleteUserInChannel(userInChannel);
+                break;
+            }
         }
     }
 }

@@ -1,13 +1,14 @@
 package com.chatroom.chatroom.services;
 
 import com.chatroom.chatroom.repository.UsersInChannelRepository;
-import com.chatroom.chatroom.user.User;
 import com.chatroom.chatroom.user.UserInChannel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 
@@ -34,15 +35,22 @@ public class UsersInChannelService {
             }
         });
     }
-    public List<User> getUsersInChannel(String channelUuid) {
-        List<User> users = new ArrayList<>();
+    public List<String> getUsersInChannel(String channelUuid) {
+        List<String> users = new ArrayList<>();
         usersInChannelRepository.findAll().forEach(userInChannel -> {
             if(userInChannel.getChannel().getUuid().equals(channelUuid)) {
-                User user = new User();
-                user.setName(userInChannel.getUsername());
-                users.add(user);
+                users.add(userInChannel.getUsername());
             }
         });
         return users;
+    }
+    public Map<String, List<String>> getUsersInChannelList(String[] channelUuids) {
+        Map<String, List<String>> usersInChannels = new HashMap<>();
+        for (String channelUuid : channelUuids) {
+            System.out.println(new ArrayList<>(getUsersInChannel(channelUuid)) + "************");
+            usersInChannels.put(channelUuid, new ArrayList<>(getUsersInChannel(channelUuid)));
+        }
+        System.out.println(usersInChannels.toString());
+        return usersInChannels;
     }
 }
