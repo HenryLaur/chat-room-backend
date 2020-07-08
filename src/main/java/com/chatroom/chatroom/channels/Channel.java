@@ -18,6 +18,7 @@ import java.util.List;
 public class Channel {
     private String name;
     @Id
+
     private String uuid;
     @OneToMany(mappedBy = "channel")
     @JsonIgnore
