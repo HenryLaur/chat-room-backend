@@ -1,5 +1,6 @@
 package com.chatroom.chatroom;
 
+import com.chatroom.chatroom.controller.CurrentURL;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +15,6 @@ import java.util.Collections;
 
 @SpringBootApplication
 public class ChatroomApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(ChatroomApplication.class, args);
 	}
@@ -23,14 +23,11 @@ public class ChatroomApplication {
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration config = new CorsConfiguration();
 
-		config.setAllowCredentials(true);
-		config.addAllowedOrigin("*");
+		config.setAllowCredentials(false);
+		config.addAllowedOrigin("http://" + CurrentURL.URL + ":3000");
 		config.addAllowedHeader("*");
 		config.addAllowedMethod("GET");
 		config.addAllowedMethod("POST");
-		config.addAllowedMethod("PUT");
-		config.addAllowedMethod("DELETE");
-		config.addAllowedMethod("OPTIONS");
 		source.registerCorsConfiguration("/**", config);
 		return new CorsFilter(source);
 	}

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 @Service
 public class MessageService {
@@ -29,6 +31,7 @@ public class MessageService {
                 messages.add(message);
             }
         });
+        messages.sort((a, b) -> a.getId() > b.getId() ? -1 : 0);
         return messages;
     }
 }

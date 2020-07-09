@@ -15,6 +15,7 @@ public class ChannelController {
 
     @Autowired
     public ChannelService channelService;
+
     @Autowired
     private UsersInChannelService usersInChannelService;
 

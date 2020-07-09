@@ -13,10 +13,12 @@ import java.util.Map;
 public class UserInChannelController {
     @Autowired
     private UsersInChannelService usersInChannelService;
+
     @GetMapping("/{uuid}")
     public List<String> getUsersInChannel(@PathVariable String uuid) {
         return usersInChannelService.getUsersInChannel(uuid);
     }
+
     @PostMapping("/channels")
     public Map<String, List<String>> getUsersInChannels(@RequestBody String[] channelUuids) {
         return usersInChannelService.getUsersInChannelList(channelUuids);

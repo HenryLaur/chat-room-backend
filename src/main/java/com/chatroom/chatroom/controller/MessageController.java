@@ -1,6 +1,5 @@
 package com.chatroom.chatroom.controller;
 
-import com.chatroom.chatroom.channels.Channel;
 import com.chatroom.chatroom.message.Message;
 import com.chatroom.chatroom.services.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
