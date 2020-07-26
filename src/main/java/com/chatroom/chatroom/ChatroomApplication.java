@@ -17,6 +17,7 @@ public class ChatroomApplication {
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration config = new CorsConfiguration();
 
+
 		config.setAllowCredentials(false);
 		config.addAllowedOrigin("*");
 		config.addAllowedHeader("*");
